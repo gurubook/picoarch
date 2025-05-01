@@ -13,7 +13,7 @@
 #define HUD_LEN 41
 #endif
 
-#define SCREEN_HEIGHT 240
+#define SCREEN_HEIGHT 320
 #define SCREEN_BPP 2
 #define SCREEN_PITCH (SCREEN_BPP * SCREEN_WIDTH)
 

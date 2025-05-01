@@ -7,7 +7,7 @@ index bb42a8e..c0f6755 100644
  	}
  
 -	/* vector games use 640x480 as default */
-+	/* vector games use 320x240 as default */
++	/* vector games use 320x320 as default */
  	if (vector_game && !iOS_fixedRes)
  	{
 -		if(safe_render_path)
@@ -25,9 +25,9 @@ index bb42a8e..c0f6755 100644
 -		   emulated_height = 240;
 -		}
 +		gfx_width = 320;
-+		gfx_height = 240;
++		gfx_height = 320;
 +		emulated_width = 320;
-+		emulated_height = 240;
++		emulated_height = 320;
  	}
  
  	gp2x_set_video_mode(16,gfx_width,gfx_height);
@@ -42,7 +42,7 @@ index 4d0cc3c..333a457 100644
 -	  options.vector_width = 640;
 -	  options.vector_height = 480;
 +	  options.vector_width = 320;
-+	  options.vector_height = 240;
++	  options.vector_height = 320;
      }
      else
      {

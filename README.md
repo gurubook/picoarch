@@ -1,150 +1,73 @@
-# picoarch - a libretro frontend designed for small screens and low power
+# Picoarch for ClockworkPi Picocalc with Luckfox Lyra
 
-picoarch uses libpicofe and SDL to create a small frontend to libretro cores. It's designed for small (320x240 2.0-2.4") screen, low-powered devices like the Trimui Model S (PowKiddy A66) and FunKey S.
+This is a quick and rought port of Picoarch, a libretro frontend designed for small screens and low power, for the ClockworkPi Picocalc with Luckfox Lyra.
 
-## Running
+Picoarch uses libpicofe and SDL to create a small frontend to libretro cores. This minor patch will provide 320x320 display support and the necessary cross compilaton mods.
 
-picoarch can be run by specifying the core library and the content to run:
+All the kudos go to the original author, neonloop, that had done a really good job, and to Hisptoot that had prepared the required picocalc/lyra dev environment and wrote the picocalc drivers.
+
+The only modification i made was adapt Makefile and adapt GFX scaling option to 320x320 pixel.
+
+## Linux on Picocalc/Luckfox
+Hisptoot has created a buildroot environment to write and compile the required kernel driver for picocalc lcd, keyboard and sound.
+
+:warning: audio require and easy hardware modification, both to the Lucfox Lyra board and Picocalc main board. This require a solder and minimal experience, don´t blame me for fire, explosion or anything bad should happen.
+
+All info about that, precompiled images, and update are available :
+
+[Picocalc ¨Luckfox lyra on picocalc¨ forum thread](https://forum.clockworkpi.com/t/luckfox-lyra-on-picocalc/16280)
+
+[Hipstoot google drive - prebuild tools SD card images and updates](https://drive.google.com/drive/folders/1TBEso7NFkO7e6z8iEBywjxi4EtJHSz4F)
+
+[Hipstoot sourcecode repository](https://github.com/hisptoot/picocalc_luckfox_lyra)
+
+## Picocalc/Luckfox Lyra dev environment
+:warning: Compilation was done on Kde Neon 6.3, but any modern Linux distro may be good.
+
+To compile this you need Hisptoot buildroot tools and library.
+You can find in the **sdk-buildroot** folder in Hisptoot [google drive](https://drive.google.com/drive/folders/1TBEso7NFkO7e6z8iEBywjxi4EtJHSz4F)
+
+Download and unzip in your choosen folder, let's say **~/luckfox**, get into directory and execute :
 
 ```
-./picoarch /path/to/core_name_libretro.so /path/to/game.gba
+cd ~/luckfox/arm-buildroot-linux-gnueabihf_sdk-buildroot
+./relocate-sdk.sh
 ```
 
-If you do not specify core or content, picoarch will have you select a core from the current directory and content using the built-in file browser.
+To set cross compile envionment, before compiling code meant to run on device, you should execute :
 
-## Building
+```
+source ~/luckfox/environment-setup
+```
 
-The frontend can currently be built for the TrimUI Model S, FunKey S, and Linux (useful for testing and debugging).
+that will set path to use device specific tool, such as compiler, linker et al.
+
+## Fetch code and compile 
 
 First, fetch the repo with submodules:
 
 ```
-git clone --recurse-submodules https://git.crowdedwood.com/picoarch
+cd ~/luckfox/
+git clone --recurse-submodules https://github.com/gurubook/picoarch.git
 ```
 
-### Linux instructions
+To build picoarch itself, you need libSDL 1.2, libpng, and libasound. Different cores may need additional dependencies, add with the package manager of choice.
 
-To build picoarch itself, you need libSDL 1.2, libpng, and libasound. Different cores may need additional dependencies.
-
-After that, `make` builds picoarch and all supported cores into this directory.
-
-### TrimUI instructions
-
-To build for TrimUI, you need to set up the [toolchain](https://git.crowdedwood.com/trimui-toolchain/about/) first.
-
-To build generic binaries:
+After that, `make device=picolyra` builds picoarch and all supported cores into this directory.
 
 ```
-make platform=trimui
+cd cd ~/luckfox/picoarch
+make device=picolyra
 ```
 
-If you want to build for MinUI, you need to install [libmmenu](https://github.com/shauninman/libmmenu) into the toolchain. Then:
+## Install on picocalc
+To perform transfer to picocal running linux you can use `adb` command connecting your computer to the Lyra USB-C port.
 
-```
-make platform=trimui MINUI=1
-```
+## Running picoarch
+Running picoarch on picocalc require a sound device, so you need to load `insmod /usr/lib/picocalc_snd_pwm.ko`
+To perform this at boot, you can remove comment to the right line in `/etc/init.d/S09picocalc`
 
-`MINUI=1` will change save/config/system paths to match MinUI standards. If you just want to include mmenu, you can run:
-
-```
-make platform=trimui MMENU=1
-```
-
-To build for distribution:
-
-```
-make platform=trimui dist-gmenu
-make platform=trimui MINUI=1 dist-minui
-```
-
-These will output a directory structure that can be moved onto the SD card into `pkg/gmenunx` or `pkg/MinUI`.
-
-Or run
-
-```
-make platform=trimui picoarch.zip
-```
-
-To build a .zip file ready for SD card.
-
-### FunKey S instructions
-
-To build for FunKey S, you need a toolchain first, following [instructions](https://doc.funkey-project.com/developer_guide/tutorials/build_system/build_program_using_sdk/) on the FunKey wiki.
-
-To build generic binaries:
-
-```
-make platform=funkey-s
-```
-
-To build a specific core as .opk file:
-
-```
-make platform=funkey-s picoarch-gambatte.opk
-```
-
-Or run
-
-```
-make platform=funkey-s picoarch-funkey-s.zip
-```
-
-To build a .zip file containing all .opk files.
-
-
-### Other build options
-
-To debug:
-
-```
-make DEBUG=1
-```
-
-To build a specific supported core:
-
-```
-make gpsp_libretro.so
-```
-
-To clean a core so it will be built again:
-
-```
-make clean-gpsp
-```
-
-To completely clean the repo (will delete, pull, and patch all core repos from scratch)
-
-```
-make force-clean
-```
-
-To build profiles for profile-guided optimization:
-
-```
-make PROFILE=GENERATE
-```
-
-To apply the generated profiles:
-
-```
-make PROFILE=APPLY
-```
-
-PGO can give noticeable speed improvements with some emulators.
-
-## Notes on cores
-
-In order to make development and testing easier, the Makefile will pull and build supported cores.
-
-You will have to make changes when adding a core, since TrimUI is not a supported libretro platform. picoarch has a `patches/` directory containing needed changes to make cores work well in picoarch. Patches are applied in order after checking out the repository. 
-
-At a minimum, you need to add a `platform=trimui` section to the core Makefile if you are building for trimui.
-
-Some features and fixes are also included in `patches` -- it would be best to try to upstream them.
-
-picoarch keeps the running core name in a global variable. This is used to override defaults and core settings to work more nicely within picoarch. Overrides based on core name are kept in `overrides/` and referenced in `overrides.c`. These are used to:
-
-- Shorten core option text and change defaults for small screen / low power devices
-- Rename buttons to match the core's system
-- Reference frameskip core options to make fast-forward faster
-- Display extra options or hide unnecessary options
+## Neonloop original code
+[Original Author README](README_ORIG.md)
+[Original license](LICENSE)
+[Original Picoarch GIT repo](https://git.crowdedwood.com/picoarch/)
