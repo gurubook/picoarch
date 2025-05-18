@@ -26,6 +26,7 @@ static const struct {
 	CE_NUM(show_cpu),
 	CE_NUM(limit_frames),
 	CE_NUM(enable_drc),
+	CE_NUM(use_srm),
 	CE_NUM(audio_buffer_size),
 	CE_NUM(scale_size),
 	CE_NUM(scale_filter),

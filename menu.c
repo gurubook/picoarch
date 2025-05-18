@@ -538,6 +538,11 @@ static const char h_scale_filter[]        =
 	"When stretching, how missing pixels are filled.\n"
 	"Nearest copies the last pixel. Sharp keeps pixels\n"
 	"aligned where possible. Smooth adds a blur effect.";
+	
+static const char h_use_srm[]        =
+	"Use .srm files for SRAM saves, needed for\n"
+	"compatibility with mainline retroarch saves.\n"
+	"Save file compression needs to be off in retroarch.";
 
 static const char *men_scale_size[] = { "Native", "Aspect", "Full", NULL};
 #else
@@ -561,6 +566,12 @@ static const char h_scale_filter[]        =
 	"are filled. Nearest copies the last\n"
 	"pixel. Sharp tries to keep pixels\n"
 	"aligned. Smooth adds a blur effect.";
+	
+static const char h_use_srm[]        =
+	"Use .srm files for SRAM saves,\n"
+	"needed for compatibility with mainline\n"
+	"retroarch saves. Save file compression\n"
+	"needs to be off in retroarch.";
 
 static const char *men_scale_size[] = { "Native", "Aspect", "Full", "Crop", NULL};
 #endif
@@ -615,6 +626,8 @@ const char *config_label(int id, int *offs) {
 
 static menu_entry e_menu_config_options[] =
 {
+	mee_onoff_h      ("Use .srm saves",           0, use_srm, 1, h_use_srm),
+	mee_label        (""),
 	mee_cust_nosave  ("Save global config",       MA_OPT_SAVECFG,      mh_savecfg, mgn_saveloadcfg),
 	mee_cust_nosave  ("Save game config",         MA_OPT_SAVECFG_GAME, mh_savecfg, mgn_saveloadcfg),
 	mee_handler_id_h ("Delete game config",       MA_OPT_RMCFG_GAME,   mh_rmcfg,   h_rm_config_game),

@@ -68,8 +68,12 @@ void sram_write(void) {
 	if (!sram_size) {
 		return;
 	}
-
-	content_based_name(content, filename, MAX_PATH, save_dir, NULL, ".sav");
+	
+	if (use_srm == 1) {
+		content_based_name(content, filename, MAX_PATH, save_dir, NULL, ".srm");
+	} else {
+		content_based_name(content, filename, MAX_PATH, save_dir, NULL, ".sav");
+	}
 
 	sram_file = fopen(filename, "w");
 	if (!sram_file) {
@@ -98,7 +102,23 @@ void sram_read(void) {
 		return;
 	}
 
-	content_based_name(content, filename, MAX_PATH, save_dir, NULL, ".sav");
+	if (use_srm == 1) {
+		content_based_name(content, filename, MAX_PATH, save_dir, NULL, ".srm");
+		
+		sram_file = fopen(filename, "r");
+		if (!sram_file) {
+			memset(filename, 0, sizeof(filename));
+			content_based_name(content, filename, MAX_PATH, save_dir, NULL, ".sav");
+		}
+	} else {
+		content_based_name(content, filename, MAX_PATH, save_dir, NULL, ".sav");
+		
+		sram_file = fopen(filename, "r");
+		if (!sram_file) {
+			memset(filename, 0, sizeof(filename));
+			content_based_name(content, filename, MAX_PATH, save_dir, NULL, ".srm");
+		}
+	}
 
 	sram_file = fopen(filename, "r");
 	if (!sram_file) {
