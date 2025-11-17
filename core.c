@@ -646,7 +646,7 @@ static int16_t pa_input_state(unsigned port, unsigned device, unsigned index, un
 void core_extract_name(const char* core_file, char *buf, size_t len) {
 	char *suffix = NULL;
 
-	strncpy(buf, basename(core_file), MAX_PATH);
+	strncpy(buf, gnu_basename(core_file), MAX_PATH);
 	buf[len - 1] = 0;
 
 	suffix = strrchr(buf, '_');

@@ -122,6 +122,12 @@ static int content_patch_compare(const struct dirent **d1, const struct dirent *
 	return strcasecmp((*d1)->d_name, (*d2)->d_name);
 }
 
+static char *gnu_basename(char *path)
+{
+    char *base = strrchr(path, '/');
+    return base ? base+1 : path;
+}
+
 static int content_patch(const struct content *content, void *data, size_t size, void **out, size_t *out_size) {
 	struct dirent **namelist;
 	char pattern[MAX_PATH];

@@ -30,7 +30,9 @@ struct core_cbs {
 	size_t (*retro_get_memory_size)(unsigned id);
 	retro_audio_buffer_status_callback_t retro_audio_buffer_status;
 };
-#define MAX_PATH PATH_MAX
+
+#define MAX_PATH 4096
+
 extern struct core_cbs current_core;
 extern char core_path[MAX_PATH];
 extern struct content *content;
