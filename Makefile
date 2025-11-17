@@ -21,19 +21,9 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 # Unpolished or slow cores that build
 # EXTRA_CORES += mame2003_plus prboom scummvm tyrquake
 
-CORES = beetle-pce-fast bluemsx fceumm fmsx gambatte gme gpsp mame2000 mednafen_ngp mednafen_wswan pcsx_rearmed picodrive pokemini quicknes smsplus-gx snes9x2002 snes9x2005 stella2014 $(EXTRA_CORES)
+#CORES = beetle-pce-fast bluemsx fceumm fmsx gambatte gme gpsp mame2000 mednafen_ngp mednafen_wswan pcsx_rearmed picodrive pokemini quicknes smsplus-gx snes9x2002 snes9x2005 stella2014 $(EXTRA_CORES)
 
-ifeq ($(device), picolyra)
-	CORES = beetle-pce-fast bluemsx fceumm fmsx gambatte mame2000 quicknes smsplus-gx snes9x2002 snes9x2005 stella2014 $(EXTRA_CORES)
-endif
-
-ifneq ($(platform), trimui)
-	ifneq ($(device), picolyra)
- 		CORES := $(CORES) dosbox-pure fake-08 fbalpha2012 snes9x2005_plus snes9x2010
-	endif
-endif
-
-# CORES = dosbox-pure
+CORES = beetle-pce-fast bluemsx fceumm fmsx gambatte mame2000 quicknes smsplus-gx snes9x2002 snes9x2005 stella2014 $(EXTRA_CORES)
 
 beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
 beetle-pce-fast_CORE = mednafen_pce_fast_libretro.so
@@ -46,10 +36,6 @@ dosbox-pure_REPO = https://github.com/schellingb/dosbox-pure
 dosbox-pure_CORE = dosbox_pure_libretro.so
 dosbox-pure_TYPES = zip,dosz,exe,com,bat,iso,cue,ins,img,ima,vhd,jrc,tc,m3u,m3u8,conf
 dosbox-pure_FLAGS = STRIPCMD="$(CROSS_COMPILE)strip"
-ifeq ($(platform), funkey-s)
-dosbox-pure_FLAGS += CYCLE_LIMIT=8200
-endif
-
 
 fake-08_REPO = https://github.com/jtothebell/fake-08
 fake-08_BUILD_PATH = fake-08/platform/libretro
@@ -125,20 +111,9 @@ stella2014_TYPES = a26,bin
 
 tyrquake_TYPES = pak
 
-ifeq ($(platform), trimui)
-	SOURCES += plat_trimui.c
-	CFLAGS += -mcpu=arm926ej-s -mtune=arm926ej-s -fno-PIC -DCONTENT_DIR='"/mnt/SDCARD/Roms"'
-	LDFLAGS += -fno-PIC
-else ifeq ($(platform), funkey-s)
-	SOURCES += plat_funkey.c funkey/fk_menu.c funkey/fk_instant_play.c
-	CFLAGS += -DCONTENT_DIR='"/mnt"' -DFUNKEY_S
-	LDFLAGS += -fPIC
-	LDFLAGS += -lSDL_image -lSDL_ttf # For fk_menu
-	core_platform = unix-armv7-hardfloat-neon
-else ifeq ($(platform), unix)
-	SOURCES += plat_linux.c
-	LDFLAGS += -fPIE
-endif
+SOURCES += plat_linux.c
+LDFLAGS += -fPIE
+
 
 ifeq ($(DEBUG), 1)
 	CFLAGS += -Og -g
