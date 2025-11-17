@@ -6,6 +6,7 @@
 #include "unzip.h"
 #include "util.h"
 #include "zlib.h"
+#include "core.h"
 
 #define HEADER_SIZE 30
 #define CHUNK 65536

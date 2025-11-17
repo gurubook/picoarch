@@ -241,7 +241,7 @@ static int content_patch_file(struct content *content, const char *path) {
 		goto finish;
 	}
 
-	content_name = basename(content_path);
+	content_name = gnu_basename(content_path);
 	snprintf(content->tmpfile, MAX_PATH, "/tmp/pa-XXXXXX%s", content_name);
 
 	outfd = mkstemps(content->tmpfile, strlen(content_name));
@@ -295,7 +295,7 @@ void content_based_name(const struct content *content,
 		if (!subdir)
 			subdir = "";
 
-		strncpy(filename, basename(path), sizeof(filename));
+		strncpy(filename, gnu_basename(path), sizeof(filename));
 	} else {
 		basedir = "";
 		subdir = "";
