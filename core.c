@@ -643,6 +643,12 @@ static int16_t pa_input_state(unsigned port, unsigned device, unsigned index, un
 	return 0;
 }
 
+char *gnu_basename(char *path)
+{
+    char *base = strrchr(path, '/');
+    return base ? base+1 : path;
+}
+
 void core_extract_name(const char* core_file, char *buf, size_t len) {
 	char *suffix = NULL;
 
