@@ -19,11 +19,6 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections
 SOURCES += plat_linux.c
 LDFLAGS += -fPIE
 
-ifeq ($(platform), unix)
-	SOURCES += plat_linux.c
-	LDFLAGS += -fPIE
-endif
-
 ifeq ($(DEBUG), 1)
 	CFLAGS += -Og -g
 	LDFLAGS += -g

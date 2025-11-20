@@ -76,8 +76,6 @@ static const struct in_pdata in_sdl_platform_data = {
 	.modmap_size  = array_size(in_sdl_mod_keymap),
 };
 
-
-
 static SDL_Surface* screen;
 
 struct audio_state {
