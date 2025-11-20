@@ -23,7 +23,7 @@ void plat_video_process(const void *data, unsigned width, unsigned height, size_
 void plat_video_flip(void);
 void plat_video_close(void);
 
-static unsigned plat_cpu_ticks(void);
+unsigned plat_cpu_ticks(void);
 
 int plat_sound_occupancy(void);
 extern void (*plat_sound_write)(const struct audio_frame *data, int frames);
