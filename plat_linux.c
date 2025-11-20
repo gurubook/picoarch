@@ -1,6 +1,5 @@
 #include <SDL/SDL.h>
 #include "libretro.h"
-#include "libpicofe/plat.h"
 #include "libpicofe/input.h"
 #include "libpicofe/in_sdl.h"
 #include "main.h"
@@ -9,7 +8,6 @@
 #include <sys/time.h>
 #include "core.h"
 #include "libpicofe/fonts.h"
-#include "libpicofe/plat.h"
 #include "menu.h"
 #include "plat.h"
 #include "scale.h"
