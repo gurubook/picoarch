@@ -51,7 +51,6 @@ ifeq ($(MMENU), 1)
 	LDFLAGS += -lSDL_image -lSDL_ttf -ldl
 endif
 
-EXTRA_CFLAGS = -Wdiscarded-qualifiers 
 CFLAGS += $(EXTRA_CFLAGS)
 
 libpicofe/.patched:
@@ -70,7 +69,8 @@ $(DEPS):
 include $(wildcard $(DEPS))
 
 OBJS = $(SOURCES:.c=.o)
-ASM_ARM_FLAGS = -Wa,-mimplicit-it=thumb
+ASM_ARM_FLAGS = " -Wa,-mimplicit-it=thumb" 
+
 $(BIN): libpicofe/.patched $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS) $(ASM_ARM_FLAGS) -o $(BIN)
 	
