@@ -37,23 +37,23 @@ struct core_options {
 
 extern struct core_options core_options;
 
-static void options_init(const struct retro_core_option_definition *defs);
-static void options_init_variables(const struct retro_variable *vars);
-static bool options_changed(void);
-static void options_update_changed(void);
+void options_init(const struct retro_core_option_definition *defs);
+void options_init_variables(const struct retro_variable *vars);
+bool options_changed(void);
+void options_update_changed(void);
 const char* options_get_key(int index);
 
-static struct core_option_entry* options_get_entry(const char* key);
+struct core_option_entry* options_get_entry(const char* key);
 
 const char* options_get_value(const char* key);
-static int* options_get_value_ptr(const char* key);
-static int options_get_value_index(const char* key);
+int* options_get_value_ptr(const char* key);
+int options_get_value_index(const char* key);
 
-static void options_set_value(const char* key, const char *value);
-static void options_set_value_index(const char* key, int value);
-static void options_set_visible(const char* key, bool visible);
+void options_set_value(const char* key, const char *value);
+void options_set_value_index(const char* key, int value);
+void options_set_visible(const char* key, bool visible);
 
 const char** options_get_options(const char* key);
-static void options_free(void);
+void options_free(void);
 
 #endif

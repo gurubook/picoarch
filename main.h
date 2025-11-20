@@ -54,18 +54,18 @@ extern char save_template_path[MAX_PATH];
 #define PA_ERROR(...) pa_log(RETRO_LOG_ERROR, __VA_ARGS__)
 #define PA_FATAL(...) do { pa_log(RETRO_LOG_ERROR, __VA_ARGS__); quit(-1); } while(0)
 
-static int screenshot(void);
+int screenshot(void);
 
-static void set_defaults(void);
-static int save_config(config_type config_type);
-static void load_config(void);
-static void load_config_keys(void);
-static int remove_config(config_type config_type);
+void set_defaults(void);
+int save_config(config_type config_type);
+void load_config(void);
+void load_config_keys(void);
+int remove_config(config_type config_type);
 
-static void handle_emu_action(emu_action action);
-static void pa_log(enum retro_log_level level, const char *fmt, ...);
-static void pa_track_render(void);
-static void finish(void);
-static int quit(int code);
+void handle_emu_action(emu_action action);
+void pa_log(enum retro_log_level level, const char *fmt, ...);
+void pa_track_render(void);
+void finish(void);
+int quit(int code);
 
 #endif /* __MAIN_H__ */
