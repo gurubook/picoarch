@@ -11,10 +11,10 @@ SOURCES   = libpicofe/input.c libpicofe/in_sdl.c libpicofe/linux/in_evdev.c libp
 
 BIN       = picoarch
 
-CFLAGS     += -fdata-sections -ffunction-sections -DPICO_HOME_DIR='"/.picoarch/"' -flto
+CFLAGS     += -fdata-sections -ffunction-sections -DPICO_HOME_DIR='"/.picoarch/"' 
 CFLAGS     += -I./ -I./libretro-common/include/ $(SDL_CFLAGS)
 
-LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
+LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections
 
 SOURCES += plat_linux.c
 LDFLAGS += -fPIE
@@ -51,6 +51,7 @@ ifeq ($(MMENU), 1)
 	LDFLAGS += -lSDL_image -lSDL_ttf -ldl
 endif
 
+EXTRA_CFLAGS = -Wdiscarded-qualifiers 
 CFLAGS += $(EXTRA_CFLAGS)
 
 libpicofe/.patched:
