@@ -14,20 +14,6 @@
 #include "plat.h"
 #include "util.h"
 
-#ifdef MMENU
-#include <dlfcn.h>
-#include <mmenu.h>
-#include <SDL/SDL.h>
-void* mmenu = NULL;
-char save_template_path[MAX_PATH];
-#endif
-
-#ifdef FUNKEY_S
-#include "funkey/fk_menu.h"
-#include "funkey/fk_instant_play.h"
-bool should_suspend = false;
-#endif
-
 bool in_menu = false;
 bool should_quit = false;
 unsigned current_audio_buffer_size;
