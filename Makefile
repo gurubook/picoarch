@@ -2,8 +2,8 @@
 platform   ?= unix
 core_platform ?= $(platform)
 
-CC        = $(CROSS_COMPILE)gcc
-SYSROOT   = $(shell $(CC) --print-sysroot)
+# CC        = $(CROSS_COMPILE)gcc
+# SYSROOT   = $(shell $(CC) --print-sysroot)
 
 PROCS     = -j4
 
