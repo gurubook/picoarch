@@ -12,8 +12,7 @@ SOURCES   = libpicofe/input.c libpicofe/in_sdl.c libpicofe/linux/in_evdev.c libp
 BIN       = picoarch
 
 CFLAGS     += -fdata-sections -ffunction-sections -DPICO_HOME_DIR='"/.picoarch/"' -flto
-CFLAGS     += -I./ -I./libretro-common/include/ $(shell $(SYSROOT)/usr/bin/sdl-config --cflags) 
-#$(SDL_CFLAGS)
+CFLAGS     += -I./ -I./libretro-common/include/ $(SDL_CFLAGS)
 
 LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 
