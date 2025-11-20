@@ -72,7 +72,7 @@ OBJS = $(SOURCES:.c=.o)
 ASM_ARM_FLAGS = " -Wa,-mimplicit-it=thumb" 
 
 $(BIN): libpicofe/.patched $(OBJS)
-	$(CC) $(OBJS) $(LDFLAGS) $(ASM_ARM_FLAGS) -o $(BIN)
+	$(CC) $(EXTRA_CFLAGS) $(OBJS) $(LDFLAGS) $(ASM_ARM_FLAGS) -o $(BIN)
 	
 .PHONY: clean-picoarch
 clean-picoarch:
