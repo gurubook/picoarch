@@ -1,0 +1,20 @@
+diff --git a/linux/plat.c b/linux/plat.c
+index 779d5b1..7fb3e49 100644
+--- a/linux/plat.c
++++ b/linux/plat.c
+@@ -86,7 +86,6 @@ int plat_get_skin_dir(char *dst, int len)
+ #endif
+ int plat_get_root_dir(char *dst, int len)
+ {
+-#if !defined(__GP2X__) && !defined(PANDORA)
+ 	const char *home = getenv("HOME");
+ 	int ret;
+ 
+@@ -97,7 +96,6 @@ int plat_get_root_dir(char *dst, int len)
+ 		mkdir(dst, 0755);
+ 		return ret;
+ 	}
+-#endif
+ 	return plat_get_exe_dir(dst, len);
+ }
+ 
