@@ -2,9 +2,6 @@
 platform   ?= unix
 core_platform ?= $(platform)
 
-# CC        = $(CROSS_COMPILE)gcc
-# SYSROOT   = $(shell $(CC) --print-sysroot)
-
 PROCS     = -j4
 
 SOURCES   = libpicofe/input.c libpicofe/in_sdl.c libpicofe/linux/in_evdev.c libpicofe/linux/plat.c libpicofe/fonts.c libpicofe/readpng.c libpicofe/config_file.c cheat.c config.c content.c core.c menu.c main.c options.c overrides.c patch.c scale.c unzip.c util.c video.c
@@ -12,9 +9,9 @@ SOURCES   = libpicofe/input.c libpicofe/in_sdl.c libpicofe/linux/in_evdev.c libp
 BIN       = picoarch
 
 CFLAGS     += -fdata-sections -ffunction-sections -DPICO_HOME_DIR='"/.picoarch/"' 
-CFLAGS     += -I./ -I./libretro-common/include/ $(SDL_CFLAGS)
+CFLAGS     += $(shell pkg-config --cflags sdl) -I./ -I./libretro-common/include/ 
 
-LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections
+LDFLAGS    += -lc -ldl -lgcc -lm $(shell pkg-config --libs sdl) $(shell pkg-config --libs alsa) -lpng -lz -Wl,--gc-sections
 
 SOURCES += plat_linux.c
 LDFLAGS += -fPIE
@@ -46,8 +43,6 @@ ifeq ($(MMENU), 1)
 	LDFLAGS += -lSDL_image -lSDL_ttf -ldl
 endif
 
-CFLAGS += $(EXTRA_CFLAGS)
-
 libpicofe/.patched:
 	cd libpicofe && ($(foreach patch, $(sort $(wildcard patches/libpicofe/*.patch)), patch --no-backup-if-mismatch --merge -p1 < ../$(patch) &&) touch .patched)
 
@@ -68,17 +63,12 @@ OBJS = $(SOURCES:.c=.o)
 $(BIN): libpicofe/.patched $(OBJS)
 	$(CC) $(EXTRA_CFLAGS) $(OBJS) $(LDFLAGS) -o $(BIN)
 	
+all: $(BIN)
+
 .PHONY: clean-picoarch
 clean-picoarch:
 	rm -f $(DEPS) $(OBJS) $(BIN)
-	rm -rf pkg
-	rm -f *.opk
 
 .PHONY: clean
 clean: clean-libpicofe clean-picoarch
 	rm -f $(SOFILES)
-
-.PHONY: clean-all
-clean-all: $(foreach core,$(CORES),clean-$(core)) clean
-
-
