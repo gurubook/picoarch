@@ -396,13 +396,10 @@ static void set_directories(const char *core_name) {
 
 	strncpy(config_dir, save_dir, MAX_PATH-1);
 
-#ifdef FUNKEY_S
 	if (strlen(picoarch_root)) {
 		snprintf(system_dir, MAX_PATH, "%s/system", picoarch_root);
 		mkdir(system_dir, 0755);
-	} else
-#endif  /* FUNKEY_S */
-	if (getcwd(cwd, MAX_PATH)) {
+	} else if (getcwd(cwd, MAX_PATH)) {
 		snprintf(system_dir, MAX_PATH, "%s/system", cwd);
 		mkdir(system_dir, 0755);
 	} else {
