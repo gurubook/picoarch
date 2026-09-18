@@ -1,6 +1,6 @@
 # Picoarch for ClockworkPi Picocalc with Luckfox Lyra
 
-This is a quick and rought port of Picoarch, a libretro frontend designed for small screens and low power, for the ClockworkPi Picocalc with Luckfox Lyra.
+This is a quick and routh port of Picoarch, a libretro frontend designed for small screens and low power, for the ClockworkPi Picocalc with Luckfox Lyra.
 
 Picoarch uses libpicofe and SDL to create a small frontend to libretro cores. This minor patch will provide 320x320 display support and the necessary cross compilaton mods.
 
@@ -56,7 +56,7 @@ To build picoarch itself, you need libSDL 1.2, libpng, and libasound. Different 
 After that, `make device=picolyra` builds picoarch and all supported cores into this directory.
 
 ```
-cd cd ~/luckfox/picoarch
+cd ~/luckfox/picoarch
 make device=picolyra
 ```
 
