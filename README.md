@@ -56,7 +56,7 @@ To build picoarch itself, you need libSDL 1.2, libpng, and libasound. Different 
 After that, `make device=picolyra` builds picoarch and all supported cores into this directory.
 
 ```
-cd cd ~/luckfox/picoarch
+cd ~/luckfox/picoarch
 make device=picolyra
 ```
 
