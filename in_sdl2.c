@@ -29,11 +29,23 @@ typedef unsigned long keybits_t;
 #define KEYBITS_WORD_BITS (sizeof(keybits_t) * 8)
 #define KC_WORDS (KC_COUNT / KEYBITS_WORD_BITS + 1)
 
+/* modifier key (mod + inkey) combo handling, ported from the
+ * in_sdl key-combos patch (patches/libpicofe/0001-key-combos.patch) */
+enum mod_state {
+	MOD_NO,
+	MOD_MAYBE,
+	MOD_YES
+};
+
 struct in_sdl2_state {
 	const in_drv_t *drv;
+	enum mod_state mod_state;
+	int allow_unbound_mods;
+	char *mods_bound;
 	keybits_t keystate[KC_WORDS];
 	// emulator keys should always be processed immediately lest one is lost
 	keybits_t emu_keys[KC_WORDS];
+	short delayed_key;
 };
 
 static void (*ext_event_handler)(void *event);
@@ -119,6 +131,14 @@ static void in_sdl2_probe(const in_drv_t *drv)
 	}
 
 	state->drv = drv;
+
+	if (drv->pdata != NULL) {
+		const struct in_pdata *pdata = drv->pdata;
+
+		if (pdata->mod_key)
+			state->mods_bound = calloc(pdata->modmap_size, sizeof(char));
+	}
+
 	in_register(IN_SDL2_PREFIX "keys", -1, state, KC_COUNT, kc_names, 0);
 }
 
@@ -126,8 +146,11 @@ static void in_sdl2_free(void *drv_data)
 {
 	struct in_sdl2_state *state = drv_data;
 
-	if (state != NULL)
+	if (state != NULL) {
+		if (state->mods_bound != NULL)
+			free(state->mods_bound);
 		free(state);
+	}
 }
 
 static const char * const *
@@ -162,6 +185,181 @@ static int get_keystate(keybits_t *keystate, int sym)
 	return !!(*ks_word & mask);
 }
 
+/* map our compact keycode back to an SDL2 keycode */
+static int kc_to_sym(short kc)
+{
+	switch (kc) {
+	case KC_ESC:       return SDLK_ESCAPE;
+	case KC_RETURN:    return SDLK_RETURN;
+	case KC_TAB:       return SDLK_TAB;
+	case KC_BACKSPACE: return SDLK_BACKSPACE;
+	case KC_SPACE:     return SDLK_SPACE;
+	case KC_UP:        return SDLK_UP;
+	case KC_DOWN:      return SDLK_DOWN;
+	case KC_LEFT:      return SDLK_LEFT;
+	case KC_RIGHT:      return SDLK_RIGHT;
+	case KC_LSHIFT:    return SDLK_LSHIFT;
+	case KC_RSHIFT:    return SDLK_RSHIFT;
+	case KC_LCTRL:     return SDLK_LCTRL;
+	case KC_RCTRL:     return SDLK_RCTRL;
+	case KC_LALT:      return SDLK_LALT;
+	case KC_RALT:      return SDLK_RALT;
+	case KC_BACKSLASH: return SDLK_BACKSLASH;
+	default:
+		if (kc >= 32 && kc < 256)
+			return kc;
+		return SDLK_UNKNOWN;
+	}
+}
+
+static int handle_event(struct in_sdl2_state *state, SDL_Event *event,
+	int *kc_out, int *down_out, int *emu_out);
+
+/* feed a synthetic key event through the normal handler */
+static void proc_synthetic(struct in_sdl2_state *state, int type, short kc,
+			   int *one_kc, int *one_down, int *got)
+{
+	SDL_Event ev;
+	int emu, ret;
+
+	memset(&ev, 0, sizeof(ev));
+	ev.type = type;
+	ev.key.keysym.sym = kc_to_sym(kc);
+
+	ret = handle_event(state, &ev, one_kc, one_down, &emu);
+	*got = (ret > 0) && (emu != 0 || one_kc != NULL);
+}
+
+/* combos act only while at least one combo target is bound (unless the
+ * key-configuration screen lifts this restriction via
+ * IN_CFG_ALLOW_UNBOUND_MOD_KEYS) */
+static int combos_active(struct in_sdl2_state *state)
+{
+	const struct in_pdata *pdata = state->drv->pdata;
+	int i;
+
+	if (!pdata->mod_key)
+		return 0;
+	if (state->allow_unbound_mods)
+		return 1;
+	if (state->mods_bound)
+		for (i = 0; i < pdata->modmap_size; i++)
+			if (state->mods_bound[i])
+				return 1;
+	return 0;
+}
+
+static int mod_translate(struct in_sdl2_state *state, SDL_Event *event,
+			 int *one_kc, int *one_down)
+{
+	const struct in_pdata *pdata = state->drv->pdata;
+	const struct mod_keymap *map;
+	short key, mod_key = pdata->mod_key;
+	int i, got;
+
+	if (event->type != SDL_KEYDOWN && event->type != SDL_KEYUP)
+		return 0;
+
+	key = sdl2key_to_kc(event->key.keysym.sym);
+	if (key < 0 || !combos_active(state))
+		return 0;
+
+	if (state->mod_state == MOD_NO && key != mod_key)
+		return 0;
+
+	if (key == mod_key) {
+		switch (state->mod_state) {
+		case MOD_NO:
+			if (event->type == SDL_KEYDOWN) {
+				/* Pressed mod, maybe a combo? Swallow the keypress
+				 * until it's determined */
+				state->mod_state = MOD_MAYBE;
+				for (i = 0; i < pdata->modmap_size; i++) {
+					map = &pdata->mod_keymap[i];
+
+					if (get_keystate(state->keystate, map->inkey) &&
+					    (state->allow_unbound_mods ||
+					     (state->mods_bound && state->mods_bound[i]))) {
+						state->mod_state = MOD_YES;
+						got = 0;
+						proc_synthetic(state, SDL_KEYUP, map->inkey,
+							       one_kc, one_down, &got);
+						if (!got)
+							proc_synthetic(state, SDL_KEYDOWN,
+								       map->outkey,
+								       one_kc, one_down, &got);
+						if (got)
+							return 2;
+					}
+				}
+				return 1;
+			}
+			/* mod release without matching press; pass through */
+			return 0;
+		case MOD_MAYBE:
+			if (event->type == SDL_KEYDOWN)
+				return 1;	/* still waiting for a combo partner */
+			/* Released mod without combo, simulate down and up */
+			state->mod_state = MOD_NO;
+			got = 0;
+			proc_synthetic(state, SDL_KEYDOWN, mod_key,
+				       one_kc, one_down, &got);
+			if (got)
+				return 2;
+			if (get_keystate(state->emu_keys, mod_key)) {
+				/* emu keys handled immediately, no need to delay */
+				proc_synthetic(state, SDL_KEYUP, mod_key,
+					       one_kc, one_down, &got);
+			} else {
+				/* Delay keyup to force handling */
+				state->delayed_key = mod_key;
+			}
+			return 1;
+		case MOD_YES:
+			if (event->type == SDL_KEYDOWN)
+				return 1;
+			/* Released mod, switch all combo keys back */
+			state->mod_state = MOD_NO;
+			for (i = 0; i < pdata->modmap_size; i++) {
+				map = &pdata->mod_keymap[i];
+
+				if (get_keystate(state->keystate, map->outkey)) {
+					got = 0;
+					proc_synthetic(state, SDL_KEYUP, map->outkey,
+						       one_kc, one_down, &got);
+					if (got)
+						return 2;
+					proc_synthetic(state, SDL_KEYDOWN, map->inkey,
+						       one_kc, one_down, &got);
+					if (got)
+						return 2;
+				}
+			}
+			return 1;
+		}
+	} else {
+		int found = 0;
+		for (i = 0; i < pdata->modmap_size; i++) {
+			map = &pdata->mod_keymap[i];
+
+			if (map->inkey == key &&
+			    (state->allow_unbound_mods ||
+			     (state->mods_bound && state->mods_bound[i]))) {
+				state->mod_state = MOD_YES;
+				got = 0;
+				proc_synthetic(state, event->type, map->outkey,
+					       one_kc, one_down, &got);
+				if (got)
+					return 2;
+				found = 1;
+			}
+		}
+		return found;
+	}
+
+	return 0;
+}
+
 static int handle_event(struct in_sdl2_state *state, SDL_Event *event,
 	int *kc_out, int *down_out, int *emu_out)
 {
@@ -192,9 +390,31 @@ static int collect_events(struct in_sdl2_state *state, int *one_kc, int *one_dow
 	int i, ret, retval = 0;
 	SDL_Event event;
 
+	/* deliver a pending delayed key release first */
+	if (state->delayed_key != 0) {
+		short kc = state->delayed_key;
+
+		state->delayed_key = 0;
+		memset(&event, 0, sizeof(event));
+		event.type = SDL_KEYUP;
+		event.key.keysym.sym = kc_to_sym(kc);
+
+		ret = handle_event(state, &event, one_kc, one_down, &is_emukey);
+		if ((is_emukey || one_kc != NULL) && ret)
+			return ret;
+	}
+
 	/* bounded drain so an event burst cannot stall a frame; events left
 	 * in the SDL queue are picked up on the next call */
 	for (i = 0; i < 64 && SDL_PollEvent(&event); i++) {
+		int r = mod_translate(state, &event, one_kc, one_down);
+
+		if (r > 0) {
+			if (r == 2)	/* single-key caller got its event */
+				return 1;
+			continue;	/* consumed by mod handling */
+		}
+
 		ret = handle_event(state, &event,
 			one_kc, one_down, &is_emukey);
 		if (ret < 0) {
@@ -211,11 +431,35 @@ static int collect_events(struct in_sdl2_state *state, int *one_kc, int *one_dow
 	return retval;
 }
 
+static void update_modifier_binds(struct in_sdl2_state *state, const int *binds)
+{
+	const struct in_pdata *pdata = state->drv->pdata;
+	int i, b;
+
+	if (!state->mods_bound)
+		return;
+
+	for (i = 0; i < pdata->modmap_size; i++) {
+		const struct mod_keymap *map = &pdata->mod_keymap[i];
+
+		state->mods_bound[i] = 0;
+		for (b = 0; b < IN_BINDTYPE_COUNT; b++) {
+			if (binds[IN_BIND_OFFS(map->outkey, b)]) {
+				state->mods_bound[i] = 1;
+				break;
+			}
+		}
+	}
+}
+
 static int in_sdl2_update(void *drv_data, const int *binds, int *result)
 {
 	struct in_sdl2_state *state = drv_data;
 	keybits_t mask;
 	int i, sym, bit, b;
+
+	if (state->mods_bound)
+		update_modifier_binds(state, binds);
 
 	collect_events(state, NULL, NULL);
 
@@ -303,6 +547,36 @@ static int in_sdl2_clean_binds(void *drv_data, int *binds, int *def_binds)
 	return cnt;
 }
 
+static int in_sdl2_get_config(void *drv_data, int what, int *val)
+{
+	struct in_sdl2_state *state = drv_data;
+
+	switch (what) {
+	case IN_CFG_ALLOW_UNBOUND_MOD_KEYS:
+		*val = state->allow_unbound_mods;
+		break;
+	default:
+		return -1;
+	}
+
+	return 0;
+}
+
+static int in_sdl2_set_config(void *drv_data, int what, int val)
+{
+	struct in_sdl2_state *state = drv_data;
+
+	switch (what) {
+	case IN_CFG_ALLOW_UNBOUND_MOD_KEYS:
+		state->allow_unbound_mods = val;
+		break;
+	default:
+		return -1;
+	}
+
+	return 0;
+}
+
 static const in_drv_t in_sdl2_drv = {
 	.prefix         = IN_SDL2_PREFIX,
 	.probe          = in_sdl2_probe,
@@ -312,6 +586,8 @@ static const in_drv_t in_sdl2_drv = {
 	.update_keycode = in_sdl2_update_keycode,
 	.menu_translate = in_sdl2_menu_translate,
 	.clean_binds    = in_sdl2_clean_binds,
+	.get_config     = in_sdl2_get_config,
+	.set_config     = in_sdl2_set_config,
 };
 
 int in_sdl2_init(const struct in_pdata *pdata, void (*handler)(void *event))
