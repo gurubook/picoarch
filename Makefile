@@ -4,14 +4,17 @@ core_platform ?= $(platform)
 
 PROCS     = -j4
 
-SOURCES   = libpicofe/input.c libpicofe/in_sdl.c libpicofe/linux/in_evdev.c libpicofe/linux/plat.c libpicofe/fonts.c libpicofe/readpng.c libpicofe/config_file.c cheat.c config.c content.c core.c menu.c main.c options.c overrides.c patch.c scale.c unzip.c util.c video.c
+SOURCES   = libpicofe/input.c in_sdl2.c libpicofe/linux/plat.c libpicofe/fonts.c libpicofe/readpng.c libpicofe/config_file.c cheat.c config.c content.c core.c menu.c main.c options.c overrides.c patch.c scale.c unzip.c util.c video.c
 
 BIN       = picoarch
 
 CFLAGS     += -fdata-sections -ffunction-sections -DPICO_HOME_DIR='"/.picoarch/"' 
-CFLAGS     += $(shell pkg-config --cflags sdl) -I./ -I./libretro-common/include/ 
+# SDL2 on Calculinux/PicoCalc provides video via the patched KMSDRM dumb
+# buffer backend (see meta-calculinux libsdl2 bbappend) and keyboard via
+# its evdev driver; audio is ALSA underneath SDL.
+CFLAGS     += $(shell pkg-config --cflags sdl2) -I./ -I./libretro-common/include/ 
 
-LDFLAGS    += -lc -ldl -lgcc -lm $(shell pkg-config --libs sdl) $(shell pkg-config --libs alsa) -lpng -lz -Wl,--gc-sections
+LDFLAGS    += -lc -ldl -lgcc -lm $(shell pkg-config --libs sdl2) -lpng -lz -Wl,--gc-sections
 
 SOURCES += plat_linux.c
 LDFLAGS += -fPIE
